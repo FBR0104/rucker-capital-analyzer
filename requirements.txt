@@ -5,3 +5,4 @@ pandas
 openai
 requests
 PyPDF2
+rapidfuzz
