@@ -1,0 +1,6 @@
+streamlit
+python-docx
+matplotlib
+pandas
+openai
+requests
