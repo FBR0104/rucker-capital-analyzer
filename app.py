@@ -50,6 +50,54 @@ if submitted:
                     st.markdown("### 📌 Cleaned Unit Trust Fund Names")
                     for fund in cleaned_fund_names:
                         st.markdown(f"- {fund}")
+                            # --- Now match to benchmark CSV using fuzzy logic ---
+    from rapidfuzz import fuzz
+    import numpy as np
+
+    try:
+        benchmark_df = pd.read_csv("Wealth_Analyzer_Benchmarks.csv")  # must be uploaded into repo or fetched from Zapier later
+        minimum_return_threshold = minimum_return
+
+        matched_results = []
+        for extracted in cleaned_fund_names:
+            best_match = None
+            best_score = 0
+
+            for idx, row in benchmark_df.iterrows():
+                score = fuzz.ratio(extracted.lower(), row['Fund Name'].lower())
+                if score > best_score:
+                    best_score = score
+                    best_match = row
+
+            if best_score > 80:
+                result = {
+                    "Extracted Fund Name": extracted,
+                    "Matched Fund Name": best_match["Fund Name"],
+                    "1Y Return": best_match["1Y Return"],
+                    "3Y Return": best_match["3Y Return"],
+                    "5Y Return": best_match["5Y Return"],
+                    "Meets Benchmark (3Y)": "✅" if best_match["3Y Return"] >= minimum_return_threshold else "❌"
+                }
+            else:
+                result = {
+                    "Extracted Fund Name": extracted,
+                    "Matched Fund Name": "❌ Not Found",
+                    "1Y Return": np.nan,
+                    "3Y Return": np.nan,
+                    "5Y Return": np.nan,
+                    "Meets Benchmark (3Y)": "⚠️"
+                }
+
+            matched_results.append(result)
+
+        import pandas as pd
+        df_results = pd.DataFrame(matched_results)
+        st.markdown("### 📊 Benchmark Results (Fuzzy Matched)")
+        st.dataframe(df_results)
+
+    except Exception as e:
+        st.error(f"Benchmark matching failed: {e}")
+
                 else:
                     st.info("No fund names detected.")
             except Exception as e:
